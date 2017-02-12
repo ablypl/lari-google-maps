@@ -93,7 +93,8 @@
         watch: {
             form($value) {
                 this.map.setCenter($value)
-            }
+            },
+
         },
         // component methods
         methods: {
@@ -137,20 +138,18 @@
                             lng: event.latLng.lng()
                         };
                         EventBus.$emit('GoogleMapApiMarkerDropped', location);
-                    })
+                    });
 
-                    EventBus.$on('GoogleMapApiMarkerDropped', center => {
-                        if(this.centerondrop){
-                            this.setCenter(center)
-                        }
-                    })
+
                 });
             },
             setCenter(data) {
                 this.map.setCenter(data);
+            },
+            setForm(center) {
                 this.form = {
-                    lat: data.lat,
-                    lng: data.lng
+                    lat: center.lat,
+                    lng: center.lng
                 };
             },
             clearMarker(){
@@ -159,11 +158,14 @@
                 this.query = '';
             },
             addMarker(position) {
-                return new this.$google.maps.Marker({
+                let marker = new this.$google.maps.Marker({
                     map: this.map,
                     draggable: this.draggable,
                     position
                 });
+                EventBus.$emit('GoogleMapApiMarkerAdded', marker);
+
+                return marker;
             }
         },
         // executes when component is created
@@ -173,6 +175,25 @@
 
                 if(this.mark){
                     this.marker = this.addMarker(this.center);
+                }
+
+                this.form = this.center;
+            });
+        },
+        mounted(){
+            EventBus.$on('GoogleMapApiMarkerAdded', (marker) => {
+                this.$google.maps.event.addListener(marker, "dragend", event => {
+                    let location = {
+                        lat: event.latLng.lat(),
+                        lng: event.latLng.lng()
+                    };
+                    EventBus.$emit('GoogleMapApiMarkerDropped', location);
+                });
+            });
+            EventBus.$on('GoogleMapApiMarkerDropped', center => {
+                this.setForm(center);
+                if(this.centerondrop){
+                    this.setCenter(center)
                 }
             })
         }
