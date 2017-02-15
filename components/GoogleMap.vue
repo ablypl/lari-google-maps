@@ -56,6 +56,10 @@
             return_center:{
                 type: Boolean,
                 default: false
+            },
+            scrollwheel: {
+                type: Boolean,
+                default: false
             }
         },
         components: {
@@ -101,7 +105,8 @@
             initMap() {
                 this.map = new this.$google.maps.Map(this.$refs.map, {
                     center: this.center,
-                    zoom: this.zoom
+                    zoom: this.zoom,
+                    scrollwheel: this.scrollwheel
                 });
             },
             locate() {
