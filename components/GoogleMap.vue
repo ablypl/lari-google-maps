@@ -17,8 +17,7 @@
         // properties defined with component
         props: {
             height: {
-                type: Number,
-                default: 400
+                type: Number
             },
             width: {
                 default: false
@@ -83,9 +82,12 @@
             },
             style() {
                 let width = '100%';
-                let height = `${this.height}px`;
+                let height = '100%';
                 if(this.width){
                     width = `${this.width}px`;
+                }
+                if(this.height){
+                    height = `${this.height}px`;
                 }
 
                 return {
