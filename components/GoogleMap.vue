@@ -2,7 +2,7 @@
     <div class="google-map-wrapper">
         <slot></slot>
         <div class="control has-adons is-locate-query is-flex">
-            <button class="button" v-if="markers" @click.prevent="clearMarkers">Usuń marker</button>
+            <button class="button" v-if="markers && editMode" @click.prevent="clearMarkers">Usuń marker</button>
             <input type="text" v-model="query" debounce="1000" v-if="search" @input="locate" class="input">
         </div>
         <div class="gMap" ref="map" :style="style"></div>
