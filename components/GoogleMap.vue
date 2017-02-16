@@ -43,6 +43,14 @@
                 type: Number,
                 default: 15
             },
+            mapTypeControl: {
+                type: Boolean,
+                default: true
+            },
+            scrollwheel: {
+                type: Boolean,
+                default: true
+            },
             search: {
                 type: Boolean,
                 default: false
@@ -55,6 +63,7 @@
                 type: Boolean,
                 default: true
             },
+
             prefix: {
                 type: String,
                 default: ''
@@ -108,7 +117,9 @@
             initMap() {
                 this.map = new this.$google.maps.Map(this.$refs.map, {
                     center: this.center,
-                    zoom: this.zoom
+                    zoom: this.zoom,
+                    mapTypeControl: this.mapTypeControl,
+                    scrollwheel: this.scrollwheel
                 });
             },
             locate() {
