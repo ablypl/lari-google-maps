@@ -1,25 +1,26 @@
 <script type="text/babel">
     export default {
-        name: '',
+        name: 'GoogleMapMarker',
         // properties defined with component
-        props: {},
-        // component variables
-        data(){
-            return {}
-        },
-        // component methods
-        methods: {},
-        // executes when component is created
-        created(){
+        props: {
+            position: {
+                required: true,
+                type: Object
+            },
+            title: {
+                type: String
+            },
+            relatedId: {
+                type: Number
+            },
+            icon: {
+                type: String
+            }
 
         },
-        // executes when component is boot and ready to use
-        mounted(){
+        computed: {
 
         }
     }
 </script>
-<template>
-    <div>
-    </div>
-</template>
+<template></template>

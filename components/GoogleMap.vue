@@ -1,7 +1,7 @@
 <template>
     <div class="google-map-wrapper">
         <div class="control has-adons is-locate-query is-flex">
-            <button class="button" v-if="marker" @click.prevent="clearMarker">Usuń marker</button>
+            <button class="button" v-if="markers" @click.prevent="clearMarkers">Usuń marker</button>
             <input type="text" v-model="query" debounce="1000" v-if="search" @input="locate" class="input">
         </div>
         <div class="gMap" ref="map" :style="style"></div>
@@ -11,13 +11,13 @@
 </template>
 
 <script type="text/babel">
-    import GoogleMapMarker from './GoogleMapMarker.vue'
     export default {
         name: 'GoogleMap',
         // properties defined with component
         props: {
             height: {
-                type: Number
+                type: Number,
+                default: 400
             },
             width: {
                 default: false
@@ -31,6 +31,10 @@
             mark: {
                 type: Boolean,
                 default: false
+            },
+            editMode: {
+                type: Boolean,
+                default: true
             },
             zoom: {
                 type: Number,
@@ -55,21 +59,15 @@
             return_center:{
                 type: Boolean,
                 default: false
-            },
-            scrollwheel: {
-                type: Boolean,
-                default: false
             }
         },
-        components: {
-            GoogleMapMarker
-        },
+
         // component variables
         data: () => ({
             map: '',
             geocoder: '',
             query: '',
-            marker: '',
+            markers: [],
             form: {
                 lat: '',
                 lng: ''
@@ -82,12 +80,9 @@
             },
             style() {
                 let width = '100%';
-                let height = '100%';
+                let height = `${this.height}px`;
                 if(this.width){
                     width = `${this.width}px`;
-                }
-                if(this.height){
-                    height = `${this.height}px`;
                 }
 
                 return {
@@ -107,8 +102,7 @@
             initMap() {
                 this.map = new this.$google.maps.Map(this.$refs.map, {
                     center: this.center,
-                    zoom: this.zoom,
-                    scrollwheel: this.scrollwheel
+                    zoom: this.zoom
                 });
             },
             locate() {
@@ -130,16 +124,16 @@
                         lat: center.lat(),
                         lng: center.lng()
                     });
-                    if(this.marker){
-                        this.marker.setMap(null);
+                    if(this.markers){
+                        this.clearMarkers()
                     }
                     if(!this.mark){
                         return;
                     }
 
-                    this.marker = this.addMarker(center);
+                    this.markers.push(this.addMarker(center));
 
-                    this.$google.maps.event.addListener(this.marker, "dragend", event => {
+                    this.$google.maps.event.addListener(this.markers, "dragend", event => {
                         let location = {
                             lat: event.latLng.lat(),
                             lng: event.latLng.lng()
@@ -160,9 +154,15 @@
                 };
             },
             clearMarker(){
-                this.marker.setMap(null);
+                this.markers.setMap(null);
                 this.marker = '';
                 this.query = '';
+            },
+            clearMarkers(){
+                this.markers.forEach(marker => {
+                    marker.setMap(null);
+                });
+                this.markers = [];
             },
             addMarker(position) {
                 let marker = new this.$google.maps.Marker({
@@ -173,6 +173,53 @@
                 EventBus.$emit('GoogleMapApiMarkerAdded', marker);
 
                 return marker;
+            },
+
+
+            addMarkersFromChildren() {
+                EventBus.$on('GoogleMapsApiLoaded', () => {
+                    this.$children.forEach(item => {
+                        let options = Object.assign({
+                                    map: this.map
+                                },
+                                item.$options.propsData,
+                                item.$options.computed
+                        );
+
+                        let marker = new this.$google.maps.Marker(options);
+                        marker.addListener('click', m => {
+                            EventBus.$emit('GoogleMapsMarkerClicked', marker, item);
+                        });
+
+                        this.markers.push(marker);
+                        EventBus.$emit('GoogleMapApiMarkerAdded', marker);
+                    })
+                });
+                EventBus.$on('GoogleMapsMarkerClicked', (marker, component) => {
+
+                })
+            },
+            addListeners() {
+
+
+                if(!this.editMode){
+                    return;
+                }
+                EventBus.$on('GoogleMapApiMarkerAdded', (marker) => {
+                    this.$google.maps.event.addListener(marker, "dragend", event => {
+                        let location = {
+                            lat: event.latLng.lat(),
+                            lng: event.latLng.lng()
+                        };
+                        EventBus.$emit('GoogleMapApiMarkerDropped', location);
+                    });
+                });
+                EventBus.$on('GoogleMapApiMarkerDropped', center => {
+                    this.setForm(center);
+                    if(this.centerondrop){
+                        this.setCenter(center)
+                    }
+                })
             }
         },
         // executes when component is created
@@ -181,28 +228,16 @@
                 this.initMap();
 
                 if(this.mark){
-                    this.marker = this.addMarker(this.center);
+                    this.markers.push(
+                            this.addMarker(this.center)
+                    );
                 }
-
                 this.form = this.center;
             });
         },
         mounted(){
-            EventBus.$on('GoogleMapApiMarkerAdded', (marker) => {
-                this.$google.maps.event.addListener(marker, "dragend", event => {
-                    let location = {
-                        lat: event.latLng.lat(),
-                        lng: event.latLng.lng()
-                    };
-                    EventBus.$emit('GoogleMapApiMarkerDropped', location);
-                });
-            });
-            EventBus.$on('GoogleMapApiMarkerDropped', center => {
-                this.setForm(center);
-                if(this.centerondrop){
-                    this.setCenter(center)
-                }
-            })
+            this.addListeners();
+            this.addMarkersFromChildren();
         }
     }
 </script>
