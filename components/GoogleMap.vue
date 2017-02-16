@@ -1,5 +1,6 @@
 <template>
     <div class="google-map-wrapper">
+        <slot></slot>
         <div class="control has-adons is-locate-query is-flex">
             <button class="button" v-if="markers" @click.prevent="clearMarkers">Usuń marker</button>
             <input type="text" v-model="query" debounce="1000" v-if="search" @input="locate" class="input">
@@ -16,7 +17,8 @@
         // properties defined with component
         props: {
             height: {
-                type: Number
+                type: Number,
+                default: 400
             },
             width: {
                 default: false
@@ -38,6 +40,10 @@
             zoom: {
                 type: Number,
                 default: 15
+            },
+            scrollwheel: {
+                type: Boolean,
+                default: true
             },
             search: {
                 type: Boolean,
@@ -101,7 +107,8 @@
             initMap() {
                 this.map = new this.$google.maps.Map(this.$refs.map, {
                     center: this.center,
-                    zoom: this.zoom
+                    zoom: this.zoom,
+                    scrollwheel: this.scrollwheel
                 });
             },
             locate() {
@@ -176,30 +183,33 @@
 
 
             addMarkersFromChildren() {
-                EventBus.$on('GoogleMapsApiLoaded', () => {
-                    this.$children.forEach(item => {
-                        let options = Object.assign({
-                                    map: this.map
-                                },
-                                item.$options.propsData,
-                                item.$options.computed
-                        );
+                this.$children.forEach(item => {
+                    let options = Object.assign({
+                                map: this.map
+                            },
+                            item.$options.propsData,
+                            item.$options.computed
+                    );
 
-                        let marker = new this.$google.maps.Marker(options);
-                        marker.addListener('click', m => {
-                            EventBus.$emit('GoogleMapsMarkerClicked', marker, item);
-                        });
+                    let marker = new this.$google.maps.Marker(options);
+                    marker.addListener('click', m => {
+                        EventBus.$emit('GoogleMapsMarkerClicked', marker, item);
+                    });
 
-                        this.markers.push(marker);
-                        EventBus.$emit('GoogleMapApiMarkerAdded', marker);
-                    })
-                });
-                EventBus.$on('GoogleMapsMarkerClicked', (marker, component) => {
-
+                    this.markers.push(marker);
+                    EventBus.$emit('GoogleMapApiMarkerAdded', marker);
                 })
+
+
+
+
             },
             addListeners() {
-
+                EventBus.$on('GoogleMapsApiLoaded', this.addMarkersFromChildren());
+                EventBus.$on('GoogleMapsApiMarkersListUpdated', () => {
+                    this.clearMarkers()
+                    this.addMarkersFromChildren()
+                });
 
                 if(!this.editMode){
                     return;

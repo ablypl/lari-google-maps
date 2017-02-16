@@ -18,7 +18,24 @@
             }
 
         },
+        // component variables
+        data(){
+            return {}
+        },
         computed: {
+
+        },
+        // component methods
+        methods: {},
+        // executes when component is created
+        beforeMount(){
+
+        },
+        created(){
+
+        },
+        // executes when component is boot and ready to use
+        mounted(){
 
         }
     }
