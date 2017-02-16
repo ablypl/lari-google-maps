@@ -43,7 +43,7 @@
                 type: Number,
                 default: 15
             },
-            mapTypeControl: {
+            maptypecontrol: {
                 type: Boolean,
                 default: true
             },
@@ -118,7 +118,7 @@
                 this.map = new this.$google.maps.Map(this.$refs.map, {
                     center: this.center,
                     zoom: this.zoom,
-                    mapTypeControl: this.mapTypeControl,
+                    mapTypeControl: this.maptypecontrol,
                     scrollwheel: this.scrollwheel
                 });
             },
