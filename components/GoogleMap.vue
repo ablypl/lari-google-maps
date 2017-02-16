@@ -16,8 +16,7 @@
         // properties defined with component
         props: {
             height: {
-                type: Number,
-                default: 400
+                type: Number
             },
             width: {
                 default: false
