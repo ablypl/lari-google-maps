@@ -18,10 +18,12 @@
         props: {
             height: {
                 type: Number,
-                default: 400
             },
             width: {
                 default: false
+            },
+            offset: {
+                type: Number
             },
             center: {
                 default: () => ({
@@ -40,10 +42,6 @@
             zoom: {
                 type: Number,
                 default: 15
-            },
-            scrollwheel: {
-                type: Boolean,
-                default: true
             },
             search: {
                 type: Boolean,
@@ -85,9 +83,12 @@
             },
             style() {
                 let width = '100%';
-                let height = `${this.height}px`;
+                let height = `${window.innerHeight - this.offset}px`;
                 if(this.width){
                     width = `${this.width}px`;
+                }
+                if(this.height){
+                    height = `${this.height}px`;
                 }
 
                 return {
@@ -107,8 +108,7 @@
             initMap() {
                 this.map = new this.$google.maps.Map(this.$refs.map, {
                     center: this.center,
-                    zoom: this.zoom,
-                    scrollwheel: this.scrollwheel
+                    zoom: this.zoom
                 });
             },
             locate() {
@@ -183,34 +183,29 @@
 
 
             addMarkersFromChildren() {
-                this.$children.forEach(item => {
-                    let options = Object.assign({
-                                map: this.map
-                            },
-                            item.$options.propsData,
-                            item.$options.computed
-                    );
+                EventBus.$on('GoogleMapsApiLoaded', () => {
+                    this.$children.forEach(item => {
+                        let options = Object.assign({
+                                    map: this.map
+                                },
+                                item.$options.propsData,
+                                item.$options.computed
+                        );
 
-                    let marker = new this.$google.maps.Marker(options);
-                    marker.addListener('click', m => {
-                        EventBus.$emit('GoogleMapsMarkerClicked', marker, item);
-                    });
+                        let marker = new this.$google.maps.Marker(options);
+                        marker.addListener('click', m => {
+                            EventBus.$emit('GoogleMapsMarkerClicked', marker, item);
+                        });
 
-                    this.markers.push(marker);
-                    EventBus.$emit('GoogleMapApiMarkerAdded', marker);
+                        this.markers.push(marker);
+                        EventBus.$emit('GoogleMapApiMarkerAdded', marker);
+                    })
+                });
+                EventBus.$on('GoogleMapsMarkerClicked', (marker, component) => {
+
                 })
-
-
-
-
             },
             addListeners() {
-                EventBus.$on('GoogleMapsApiLoaded', this.addMarkersFromChildren());
-                EventBus.$on('GoogleMapsApiMarkersListUpdated', () => {
-                    this.clearMarkers()
-                    this.addMarkersFromChildren()
-                });
-
                 if(!this.editMode){
                     return;
                 }
