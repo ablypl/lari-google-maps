@@ -37,7 +37,7 @@
             },
             editMode: {
                 type: Boolean,
-                default: true
+                default: false
             },
             zoom: {
                 type: Number,
@@ -194,65 +194,67 @@
 
 
             addMarkersFromChildren() {
-                EventBus.$on('GoogleMapsApiLoaded', () => {
-                    this.$children.forEach(item => {
-                        let options = Object.assign({
-                                    map: this.map
-                                },
-                                item.$options.propsData,
-                                item.$options.computed
-                        );
+                this.$children.forEach(item => {
+                    let options = Object.assign({
+                                map: this.map
+                            },
+                            item.$options.propsData,
+                            item.$options.computed
+                    );
 
-                        let marker = new this.$google.maps.Marker(options);
-                        marker.addListener('click', m => {
-                            EventBus.$emit('GoogleMapsMarkerClicked', marker, item);
-                        });
+                    let marker = new this.$google.maps.Marker(options);
+                    marker.addListener('click', m => {
+                        EventBus.$emit('GoogleMapsMarkerClicked', marker, item);
+                    });
 
-                        this.markers.push(marker);
-                        EventBus.$emit('GoogleMapApiMarkerAdded', marker);
-                    })
+                    this.markers.push(marker);
+                    EventBus.$emit('GoogleMapApiMarkerAdded', marker);
                 });
-                EventBus.$on('GoogleMapsMarkerClicked', (marker, component) => {
-
-                })
+            },
+            listenMarkerDragend(marker) {
+                this.$google.maps.event.addListener(marker, "dragend", event => {
+                    let location = {
+                        lat: event.latLng.lat(),
+                        lng: event.latLng.lng()
+                    };
+                    EventBus.$emit('GoogleMapApiMarkerDropped', location);
+                });
             },
             addListeners() {
+                EventBus.$on('GoogleMapApiMarkersUpdated', () => {
+                    this.addMarkersFromChildren()
+                });
+
                 if(!this.editMode){
                     return;
                 }
-                EventBus.$on('GoogleMapApiMarkerAdded', (marker) => {
-                    this.$google.maps.event.addListener(marker, "dragend", event => {
-                        let location = {
-                            lat: event.latLng.lat(),
-                            lng: event.latLng.lng()
-                        };
-                        EventBus.$emit('GoogleMapApiMarkerDropped', location);
-                    });
-                });
+                EventBus.$on('GoogleMapApiMarkerAdded', this.listenMarkerDragend(marker));
                 EventBus.$on('GoogleMapApiMarkerDropped', center => {
                     this.setForm(center);
                     if(this.centerondrop){
                         this.setCenter(center)
                     }
                 })
+            },
+            markCenter(){
+                if(this.mark){
+                    this.markers.push(this.addMarker(this.center));
+                }
+                if(this.editMode){
+                    this.form = this.center;
+                }
             }
         },
         // executes when component is created
         beforeMount(){
             EventBus.$on('GoogleMapsApiLoaded', () => {
                 this.initMap();
-
-                if(this.mark){
-                    this.markers.push(
-                            this.addMarker(this.center)
-                    );
-                }
-                this.form = this.center;
+                this.addMarkersFromChildren();
+                this.markCenter();
             });
         },
         mounted(){
             this.addListeners();
-            this.addMarkersFromChildren();
         }
     }
 </script>
