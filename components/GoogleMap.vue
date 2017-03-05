@@ -133,10 +133,10 @@
                     if(status !== component.$google.maps.GeocoderStatus.OK){
                         return;
                     }
-                    EventBus.$emit('GoogleMapApiFoundLocation', results[0].geometry.location);
+                    Event.fire('GoogleMapApiFoundLocation', results[0].geometry.location);
                 });
 
-                EventBus.$on('GoogleMapApiFoundLocation', (center) => {
+                Event.listen('GoogleMapApiFoundLocation', (center) => {
                     this.setCenter({
                         lat: center.lat(),
                         lng: center.lng()
@@ -155,7 +155,7 @@
                             lat: event.latLng.lat(),
                             lng: event.latLng.lng()
                         };
-                        EventBus.$emit('GoogleMapApiMarkerDropped', location);
+                        Event.fire('GoogleMapApiMarkerDropped', location);
                     });
 
 
@@ -187,7 +187,7 @@
                     draggable: this.draggable,
                     position
                 });
-                EventBus.$emit('GoogleMapApiMarkerAdded', marker);
+                Event.fire('GoogleMapApiMarkerAdded', marker);
 
                 return marker;
             },
@@ -204,11 +204,11 @@
 
                     let marker = new this.$google.maps.Marker(options);
                     marker.addListener('click', m => {
-                        EventBus.$emit('GoogleMapsMarkerClicked', marker, item);
+                        Event.fire('GoogleMapsMarkerClicked', marker, item);
                     });
 
                     this.markers.push(marker);
-                    EventBus.$emit('GoogleMapApiMarkerAdded', marker);
+                    Event.fire('GoogleMapApiMarkerAdded', marker);
                 });
             },
             listenMarkerDragend(marker) {
@@ -217,19 +217,19 @@
                         lat: event.latLng.lat(),
                         lng: event.latLng.lng()
                     };
-                    EventBus.$emit('GoogleMapApiMarkerDropped', location);
+                    Event.fire('GoogleMapApiMarkerDropped', location);
                 });
             },
             addListeners() {
-                EventBus.$on('GoogleMapApiMarkersUpdated', () => {
+                Event.listen('GoogleMapApiMarkersUpdated', () => {
                     this.addMarkersFromChildren()
                 });
 
                 if(!this.editMode){
                     return;
                 }
-                EventBus.$on('GoogleMapApiMarkerAdded', this.listenMarkerDragend(marker));
-                EventBus.$on('GoogleMapApiMarkerDropped', center => {
+                Event.listen('GoogleMapApiMarkerAdded', this.listenMarkerDragend(marker));
+                Event.listen('GoogleMapApiMarkerDropped', center => {
                     this.setForm(center);
                     if(this.centerondrop){
                         this.setCenter(center)
@@ -247,7 +247,7 @@
         },
         // executes when component is created
         beforeMount(){
-            EventBus.$on('GoogleMapsApiLoaded', () => {
+            Event.listen('GoogleMapsApiLoaded', () => {
                 this.initMap();
                 this.addMarkersFromChildren();
                 this.markCenter();
